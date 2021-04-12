@@ -32,5 +32,19 @@ namespace Gifter.Controllers
             return CreatedAtAction("Get", new { id = user.Id }, user);
         }
 
+
+        [HttpPut("{id}")]
+        public IActionResult Put(int id, UserProfile user)
+        {
+            if (id != user.Id)
+            {
+                return BadRequest();
+            }
+
+            _userProfileRepository.Update(user);
+            return NoContent();
+        }
+
+
     }
 }

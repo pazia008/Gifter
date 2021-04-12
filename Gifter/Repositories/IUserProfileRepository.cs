@@ -7,5 +7,6 @@ namespace Gifter.Repositories
     {
         List<UserProfile> GetAllUsers();
         void Add(UserProfile user);
+        void Update(UserProfile user);
     }
 }

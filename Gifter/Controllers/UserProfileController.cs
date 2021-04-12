@@ -46,5 +46,13 @@ namespace Gifter.Controllers
         }
 
 
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            _userProfileRepository.Delete(id);
+            return NoContent();
+        }
+
+
     }
 }

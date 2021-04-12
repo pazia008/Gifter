@@ -108,6 +108,68 @@ namespace Gifter.Repositories
         }
 
 
+        public Post GetPostByIdWithComments(int id) {
+            using (var conn = Connection)
+            {
+                conn.Open();
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+                          SELECT p.Title, p.Caption, p.DateCreated AS PostDate, p.ImageUrl AS PostUrl, p.UserProfileId, up.Bio AS Bio, up.DateCreated AS UserDate, up.Email, up.ImageUrl AS UserUrl, up.[Name], up.Id AS UserId, c.Id AS CommentId, c.Message, c.UserProfileId AS CommentProfile, c.PostId AS CommentPost
+                           FROM Post p
+                           LEFT JOIN UserProfile up  on p.UserProfileId = up.Id
+                           LEFT JOIN Comment c on c.PostId = p.id
+                           WHERE p.Id = @Id";
+
+                    DbUtils.AddParameter(cmd, "@Id", id);
+
+                    var reader = cmd.ExecuteReader();
+
+                    Post post = null;
+                    if (reader.Read())
+                    {
+                        post = new Post()
+                        {
+                            Id = id,
+                            Title = DbUtils.GetString(reader, "Title"),
+                            Caption = DbUtils.GetString(reader, "Caption"),
+                            DateCreated = DbUtils.GetDateTime(reader, "PostDate"),
+                            ImageUrl = DbUtils.GetString(reader, "PostUrl"),
+                            UserProfileId = DbUtils.GetInt(reader, "UserProfileId"),
+
+                            UserProfile = new UserProfile()
+                            {
+                                Id = DbUtils.GetInt(reader, "UserId"),
+                                Name = DbUtils.GetString(reader, "Name"),
+                                Email = DbUtils.GetString(reader, "Email"),
+                                DateCreated = DbUtils.GetDateTime(reader, "UserDate"),
+                                ImageUrl = DbUtils.GetString(reader, "UserUrl"),
+                            },
+                            Comments = new List<Comment>()
+                        };
+                    }
+
+                    if (DbUtils.IsNotDbNull(reader, "CommentId")) {
+                        post.Comments.Add(new Comment()
+                        { 
+                        Id = DbUtils.GetInt(reader, "CommentId"),
+                        Message = DbUtils.GetString(reader, "Message"),
+                        PostId = DbUtils.GetInt(reader, "CommentPost"),
+                            UserProfileId = DbUtils.GetInt(reader, "CommentProfile"),
+                        }
+                        );
+                    }
+
+                    reader.Close();
+
+                    return post;
+                }
+            }
+
+
+        }
+
+
         public List<Post> GetAllWithComments()
         {
             using (var conn = Connection)

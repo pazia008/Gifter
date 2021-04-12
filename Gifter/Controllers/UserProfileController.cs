@@ -24,5 +24,13 @@ namespace Gifter.Controllers
             return Ok(_userProfileRepository.GetAllUsers());
         }
 
+
+        [HttpPost]
+        public IActionResult Add(UserProfile user)
+        {
+            _userProfileRepository.Add(user);
+            return CreatedAtAction("Get", new { id = user.Id }, user);
+        }
+
     }
 }

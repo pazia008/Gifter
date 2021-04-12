@@ -117,5 +117,55 @@ namespace Gifter.Repositories
         }
 
 
+        public List<UserProfile> GetPostByUserId()
+        {
+            using (var conn = Connection)
+            {
+                conn.Open();
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+                          SELECT p.Title, p.Caption, p.DateCreated AS PostDate, p.ImageUrl AS PostUrl, p.UserProfileId, up.Bio AS Bio, up.DateCreated AS UserDate, up.Email, up.ImageUrl AS UserUrl, up.[Name], up.Id AS UserId
+                           FROM Post p
+                           LEFT JOIN UserProfile up  on p.UserProfileId = up.Id
+                           WHERE p.Id = @Id";
+
+                    var reader = cmd.ExecuteReader();
+
+                    UserProfile user = null;
+                    if (reader.Read())
+                    {
+                       user = new UserProfile()
+                        {
+                           Id = DbUtils.GetInt(reader, "UserId"),
+                           Name = DbUtils.GetString(reader, "Name"),
+                           Email = DbUtils.GetString(reader, "Email"),
+                           DateCreated = DbUtils.GetDateTime(reader, "UserDate"),
+                           ImageUrl = DbUtils.GetString(reader, "UserUrl"),
+
+                           Post = new Post()
+                            {
+                                Id = id,
+                                Title = DbUtils.GetString(reader, "Title"),
+                                Caption = DbUtils.GetString(reader, "Caption"),
+                                DateCreated = DbUtils.GetDateTime(reader, "PostDate"),
+                                ImageUrl = DbUtils.GetString(reader, "PostUrl"),
+                                UserProfileId = DbUtils.GetInt(reader, "UserProfileId"),
+                               
+                            },
+                            
+                        };
+                    }
+
+                    reader.Close();
+
+                    return user;
+                }
+            }
+
+
+        }
+
+
     }
 }
